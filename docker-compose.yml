@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: renovation-ledger-db
+    environment:
+      POSTGRES_DB: renovation_ledger
+      POSTGRES_USER: renovation
+      POSTGRES_PASSWORD: renovation_local
+    ports:
+      - "5433:5432"
+    volumes:
+      - renovation_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U renovation -d renovation_ledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: renovation-ledger-backend
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8080
+      DB_URL: jdbc:postgresql://postgres:5432/renovation_ledger
+      DB_USERNAME: renovation
+      DB_PASSWORD: renovation_local
+      UPLOAD_DIR: /app/uploads
+    ports:
+      - "18080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: renovation-ledger-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  renovation_pgdata:
+  backend_uploads:
