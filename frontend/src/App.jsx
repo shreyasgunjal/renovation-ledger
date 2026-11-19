@@ -87,7 +87,8 @@ export default function App(){
     const fd=new FormData();fd.append('file',file);
     const response=await fetch(API+'/expenses/'+id+'/receipt',{method:'POST',headers:authHeaders(),body:fd});
     if(!response.ok) throw new Error('Could not restore receipt');
-    load();
+    await response.json();
+    await load();
   }
   function exportCSV(){
     const rows=[['Date','Description','Category','Paid to','Payment method','Amount (INR)'],...expenses.map(e=>[e.date,e.description,e.category,e.paidTo,e.paymentMethod,e.amount])];

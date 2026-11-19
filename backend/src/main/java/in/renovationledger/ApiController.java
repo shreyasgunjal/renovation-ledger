@@ -55,6 +55,13 @@ public class ApiController {
   }
   @DeleteMapping("/contractors/{id}") public void deleteContractor(@PathVariable Long id) { contractors.deleteById(id); }
 
+  @PutMapping("/expenses/{id}/receipt")
+  public Expense setReceiptReference(@PathVariable Long id, @RequestBody Map<String,String> body) {
+    Expense expense = expenses.findById(id).orElseThrow();
+    expense.receiptFile = body.get("receiptFile");
+    return expenses.save(expense);
+  }
+
   @PostMapping(value="/expenses/{id}/receipt", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
   public Expense replaceReceipt(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws Exception {
     Expense expense = expenses.findById(id).orElseThrow();
