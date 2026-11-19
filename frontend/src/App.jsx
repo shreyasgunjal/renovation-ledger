@@ -3,7 +3,7 @@ import { LayoutDashboard, Receipt, Users, Download, Plus, IndianRupee, Trash2, C
 
 const API = import.meta.env.VITE_API_URL || '/api';
 const BUDGET_DEFAULT = 1600000;
-const categories = ['Civil work','Demolition & debris','Plumbing','Electrical','Flooring & tiles','False ceiling','Painting','Modular kitchen','Wardrobes & furniture','Bathroom fittings','Lighting','Designer fees','Miscellaneous'];
+const categories = ['Civil work','Demolition & debris','Plumbing','Electrical','Flooring & tiles','False ceiling','Painting','Modular kitchen','Wardrobes & furniture','Bathroom fittings','Lighting','Designer fees','Rent','Architect (Neel)','Miscellaneous'];
 const money = n => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(n||0));
 
 export default function App(){
