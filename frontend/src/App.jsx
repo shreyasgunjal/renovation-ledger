@@ -82,6 +82,13 @@ export default function App(){
     if(r.ok){setShowContractor(false);setContractorForm({name:'',workType:'Civil work',phone:'',agreedAmount:'',paidAmount:'0'});load()}else alert('Could not save contractor');
   }
   async function removeExpense(id){if(isAdmin&&confirm('Delete this expense?')){await fetch(API+'/expenses/'+id,{method:'DELETE',headers:authHeaders()});load()}}
+  async function replaceReceipt(id,file){
+    if(!isAdmin||!file) return;
+    const fd=new FormData();fd.append('file',file);
+    const response=await fetch(API+'/expenses/'+id+'/receipt',{method:'POST',headers:authHeaders(),body:fd});
+    if(!response.ok) throw new Error('Could not restore receipt');
+    load();
+  }
   function exportCSV(){
     const rows=[['Date','Description','Category','Paid to','Payment method','Amount (INR)'],...expenses.map(e=>[e.date,e.description,e.category,e.paidTo,e.paymentMethod,e.amount])];
     const csv=rows.map(row=>row.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\\n');
@@ -119,4 +126,4 @@ async function openReceipt(auth, url){
 function Field({label,children}){return <label className="field"><span>{label}</span>{children}</label>}
 function Modal({title,close,children}){return <div className="backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}><div className="modal"><div className="modal-head"><h2>{title}</h2><button className="close" onClick={close}>×</button></div>{children}</div></div>}
 function ExpenseTable({expenses,onDelete,isAdmin=true,auth=''}){
-  return expenses.length?<div className="table-wrap"><table><thead><tr><th>DATE</th><th>DESCRIPTION</th><th>CATEGORY</th><th>PAYMENT</th><th>AMOUNT</th><th></th></tr></thead><tbody>{expenses.map(e=><tr key={e.id}><td>{e.date}</td><td><b>{e.description}</b>{e.paidTo&&<small>Paid to {e.paidTo}</small>}{e.receiptFile&&<small><a href="#" onClick={ev=>{ev.preventDefault();openReceipt(auth,API+'/receipts/'+encodeURIComponent(e.receiptFile))}}>View receipt</a></small>}</td><td><span className="pill">{e.category}</span></td><td>{e.paymentMethod}</td><td><b>{money(e.amount)}</b></td>{isAdmin&&<td><button className="icon-btn" title="Delete expense" onClick={()=>onDelete(e.id)}><Trash2 size={16}/></button></td>}</tr>)}</tbody></table></div>:<div className="empty"><Receipt size={28}/><b>No expenses recorded yet</b><span>Add your first renovation expense to start tracking your budget.</span></div>}
+  return expenses.length?<div className="table-wrap"><table><thead><tr><th>DATE</th><th>DESCRIPTION</th><th>CATEGORY</th><th>PAYMENT</th><th>AMOUNT</th><th></th></tr></thead><tbody>{expenses.map(e=><tr key={e.id}><td>{e.date}</td><td><b>{e.description}</b>{e.paidTo&&<small>Paid to {e.paidTo}</small>}{e.receiptFile&&<small><a href="#" onClick={ev=>{ev.preventDefault();openReceipt(auth,API+'/receipts/'+encodeURIComponent(e.receiptFile))}}>View receipt</a></small>}{isAdmin&&<small><label className="replace-receipt">Replace receipt<input type="file" accept="image/*,.pdf" onChange={ev=>replaceReceipt(e.id,ev.target.files[0]).catch(error=>alert(error.message))}/></label></small>}</td><td><span className="pill">{e.category}</span></td><td>{e.paymentMethod}</td><td><b>{money(e.amount)}</b></td>{isAdmin&&<td><button className="icon-btn" title="Delete expense" onClick={()=>onDelete(e.id)}><Trash2 size={16}/></button></td>}</tr>)}</tbody></table></div>:<div className="empty"><Receipt size={28}/><b>No expenses recorded yet</b><span>Add your first renovation expense to start tracking your budget.</span></div>}

@@ -54,4 +54,14 @@ public class ApiController {
     c.id = id; return contractors.save(c);
   }
   @DeleteMapping("/contractors/{id}") public void deleteContractor(@PathVariable Long id) { contractors.deleteById(id); }
+
+  @PostMapping(value="/expenses/{id}/receipt", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+  public Expense replaceReceipt(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws Exception {
+    Expense expense = expenses.findById(id).orElseThrow();
+    String original = Paths.get(Objects.requireNonNull(file.getOriginalFilename())).getFileName().toString();
+    String safe = UUID.randomUUID() + "-" + original.replaceAll("[^a-zA-Z0-9._-]", "_");
+    Files.copy(file.getInputStream(), uploadPath.resolve(safe), StandardCopyOption.REPLACE_EXISTING);
+    expense.receiptFile = safe;
+    return expenses.save(expense);
+  }
 }
