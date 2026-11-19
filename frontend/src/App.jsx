@@ -116,13 +116,15 @@ export default function App(){
   </div>
 }
 async function openReceipt(auth, url){
+  const viewer=window.open('', '_blank');
+  if(viewer){viewer.document.title='Opening receipt…';}
   try{
     const response=await fetch(url,{headers:{Authorization:'Basic '+auth}});
     if(!response.ok) throw new Error('Could not open receipt');
     const blob=await response.blob();
     const objectUrl=URL.createObjectURL(blob);
-    window.open(objectUrl,'_blank','noopener,noreferrer');
-  }catch(error){alert(error.message)}
+    if(viewer){viewer.location.href=objectUrl;}else{const link=document.createElement('a');link.href=objectUrl;link.target='_blank';link.rel='noopener noreferrer';link.click();}
+  }catch(error){if(viewer)viewer.close();alert(error.message)}
 }
 function Field({label,children}){return <label className="field"><span>{label}</span>{children}</label>}
 function Modal({title,close,children}){return <div className="backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)close()}}><div className="modal"><div className="modal-head"><h2>{title}</h2><button className="close" onClick={close}>×</button></div>{children}</div></div>}
