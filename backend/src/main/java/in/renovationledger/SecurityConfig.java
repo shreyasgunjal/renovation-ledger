@@ -1,5 +1,6 @@
 package in.renovationledger;
 
+import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 public class SecurityConfig {
@@ -34,6 +38,23 @@ public class SecurityConfig {
     UserDetails viewer = User.withUsername(viewerUsername)
         .password(encoder.encode(viewerPassword)).roles("VIEWER").build();
     return new InMemoryUserDetailsManager(admin, viewer);
+  }
+
+  @Bean
+  CorsConfigurationSource corsConfigurationSource(
+      @Value("${app.allowed-origins:http://localhost:5173,http://localhost:5174}") String allowedOrigins) {
+    CorsConfiguration config = new CorsConfiguration();
+    Arrays.stream(allowedOrigins.split(","))
+        .map(String::trim)
+        .filter(origin -> !origin.isEmpty())
+        .forEach(config::addAllowedOrigin);
+    config.setAllowCredentials(true);
+    config.addAllowedHeader("*");
+    config.addAllowedMethod("*");
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
   }
 
   @Bean
