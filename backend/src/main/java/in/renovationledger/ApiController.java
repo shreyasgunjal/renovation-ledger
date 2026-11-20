@@ -14,10 +14,11 @@ public class ApiController {
   private final ExpenseRepository expenses;
   private final ContractorRepository contractors;
   private final Path uploadPath;
+  private final ActivityNotificationRepository notifications;
 
   public ApiController(ExpenseRepository expenses, ContractorRepository contractors,
-      @Value("${app.upload-dir}") String uploadDir) throws Exception {
-    this.expenses = expenses; this.contractors = contractors;
+      ActivityNotificationRepository notifications, @Value("${app.upload-dir}") String uploadDir) throws Exception {
+    this.expenses = expenses; this.contractors = contractors; this.notifications = notifications;
     this.uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
     Files.createDirectories(uploadPath);
   }
@@ -25,7 +26,11 @@ public class ApiController {
   @GetMapping("/expenses") public List<Expense> expenses() { return expenses.findAll(); }
   @PostMapping("/expenses") public Expense addExpense(@RequestBody Expense e) {
     if (e.amount == null || e.amount <= 0) throw new IllegalArgumentException("Amount must be greater than zero");
-    return expenses.save(e);
+    Expense expense = expenses.save(e);
+    ActivityNotification notification = new ActivityNotification();
+    notification.message = "New expense: " + expense.description + " — " + money(expense.amount);
+    notifications.save(notification);
+    return expense;
   }
   @DeleteMapping("/expenses/{id}") public void deleteExpense(@PathVariable Long id) { expenses.deleteById(id); }
 
@@ -70,5 +75,31 @@ public class ApiController {
     Files.copy(file.getInputStream(), uploadPath.resolve(safe), StandardCopyOption.REPLACE_EXISTING);
     expense.receiptFile = safe;
     return expenses.save(expense);
+  }
+
+  @PutMapping("/expenses/{id}") public Expense updateExpense(@PathVariable Long id, @RequestBody Expense updated) {
+    Expense expense = expenses.findById(id).orElseThrow();
+    expense.date = updated.date;
+    expense.description = updated.description;
+    expense.category = updated.category;
+    expense.paymentMethod = updated.paymentMethod;
+    expense.paidTo = updated.paidTo;
+    expense.amount = updated.amount;
+    return expenses.save(expense);
+  }
+
+  @GetMapping("/notifications") public List<ActivityNotification> notificationList() {
+    return notifications.findAllByOrderByCreatedAtDesc();
+  }
+
+  @PutMapping("/notifications/read") public void markNotificationsRead() {
+    for (ActivityNotification notification : notifications.findAll()) {
+      notification.readByViewer = true;
+      notifications.save(notification);
+    }
+  }
+
+  private static String money(Double amount) {
+    return "₹" + (amount == null ? "0" : String.format("%,.0f", amount));
   }
 }

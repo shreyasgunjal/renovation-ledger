@@ -27,6 +27,11 @@ services:
       DB_USERNAME: renovation
       DB_PASSWORD: renovation_local
       UPLOAD_DIR: /app/uploads
+      ADMIN_USERNAME: Shreyas
+      ADMIN_PASSWORD: Gunjal@12
+      VIEWER_USERNAME: Gunjal
+      VIEWER_PASSWORD: Gunjal@15
+      APP_ALLOWED_ORIGINS: http://localhost,http://127.0.0.1
     ports:
       - "18080:8080"
     depends_on:
